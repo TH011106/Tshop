@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}TShop — Marketplace Premium de Afiliados{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO ─────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">✨ Marketplace Premium de Afiliados</div>
+    <h1 class="hero-title">
+      Os melhores<br/>
+      <span class="hero-accent">produtos</span><br/>
+      com os melhores preços
+    </h1>
+    <p class="hero-sub">Curadoria exclusiva de eletrônicos, moda, games e muito mais. Clique, compre e economize.</p>
+    <div class="hero-actions">
+      <a href="{{ url_for('produtos') }}" class="btn-primary">Ver Todos os Produtos →</a>
+      <a href="{{ url_for('promocoes') }}" class="btn-ghost">🔥 Ver Promoções</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num">500+</span><span class="stat-label">Produtos</span></div>
+      <div class="stat"><span class="stat-num">50k+</span><span class="stat-label">Clientes</span></div>
+      <div class="stat"><span class="stat-num">98%</span><span class="stat-label">Satisfação</span></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-card-float card-1">
+      <span>📱</span>
+      <div>
+        <strong>iPhone 15 Pro</strong>
+        <small>R$ 8.999</small>
+      </div>
+    </div>
+    <div class="hero-card-float card-2">
+      <span>🎮</span>
+      <div>
+        <strong>PS5 Slim</strong>
+        <small>R$ 3.799</small>
+      </div>
+    </div>
+    <div class="hero-card-float card-3">
+      <span>💻</span>
+      <div>
+        <strong>MacBook Air M3</strong>
+        <small>R$ 12.999</small>
+      </div>
+    </div>
+    <div class="hero-orb orb-1"></div>
+    <div class="hero-orb orb-2"></div>
+    <div class="hero-orb orb-3"></div>
+  </div>
+</section>
+
+<!-- ── CATEGORIES GRID ──────────────────────────────────── -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Explorar Categorias</h2>
+      <a href="{{ url_for('produtos') }}" class="see-all">Ver tudo →</a>
+    </div>
+    <div class="categories-grid">
+      {% for cat in categories %}
+      <a href="{{ url_for('produtos', categoria=cat.slug) }}" class="category-card">
+        <span class="cat-emoji">{{ cat.icon }}</span>
+        <span class="cat-label">{{ cat.name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURED PRODUCTS ─────────────────────────────────── -->
+<section class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">⭐ Destaques</h2>
+      <a href="{{ url_for('produtos') }}" class="see-all">Ver tudo →</a>
+    </div>
+    <div class="products-grid">
+      {% for p in featured %}
+      {% include '_product_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── PROMO BANNER ──────────────────────────────────────── -->
+<section class="promo-banner">
+  <div class="container">
+    <div class="promo-banner-inner">
+      <div class="promo-text">
+        <div class="promo-tag">🔥 Ofertas Relâmpago</div>
+        <h2>Até <span class="highlight">50% OFF</span><br/>nos melhores produtos</h2>
+        <p>Aproveite os preços mais baixos em eletrônicos, moda e games.</p>
+        <a href="{{ url_for('promocoes') }}" class="btn-primary">Ver Promoções →</a>
+      </div>
+      <div class="promo-orbs">
+        <div class="p-orb p-orb-1"></div>
+        <div class="p-orb p-orb-2"></div>
+        <div class="promo-icons">
+          <span>📱</span><span>💻</span><span>🎮</span><span>⌚</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ON SALE ───────────────────────────────────────────── -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">🔥 Em Promoção</h2>
+      <a href="{{ url_for('promocoes') }}" class="see-all">Ver todas →</a>
+    </div>
+    <div class="products-grid">
+      {% for p in on_sale %}
+      {% include '_product_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── RECENT ─────────────────────────────────────────────── -->
+<section class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">🆕 Recém Chegados</h2>
+      <a href="{{ url_for('produtos') }}" class="see-all">Ver tudo →</a>
+    </div>
+    <div class="products-grid">
+      {% for p in recent %}
+      {% include '_product_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── TRUST STRIP ───────────────────────────────────────── -->
+<section class="trust-strip">
+  <div class="container">
+    <div class="trust-grid">
+      <div class="trust-item">
+        <span class="trust-icon">🔒</span>
+        <div><strong>Compra Segura</strong><p>Links verificados e criptografados</p></div>
+      </div>
+      <div class="trust-item">
+        <span class="trust-icon">⚡</span>
+        <div><strong>Entrega Rápida</strong><p>Parceiros com envio expresso</p></div>
+      </div>
+      <div class="trust-item">
+        <span class="trust-icon">💰</span>
+        <div><strong>Melhor Preço</strong><p>Curadoria dos menores preços</p></div>
+      </div>
+      <div class="trust-item">
+        <span class="trust-icon">🏆</span>
+        <div><strong>Top Avaliados</strong><p>Somente produtos 4+ estrelas</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

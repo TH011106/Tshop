@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Painel Admin — TShop{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:2rem;padding-bottom:3rem;">
+
+  <div class="admin-header">
+    <h1 class="page-title">⚙️ Painel Administrativo</h1>
+    <p class="page-sub">Gerencie produtos, categorias e promoções</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="admin-stats">
+    <div class="admin-stat-card">
+      <span class="admin-stat-icon">📦</span>
+      <div>
+        <div class="admin-stat-num">{{ total_products }}</div>
+        <div class="admin-stat-label">Produtos Total</div>
+      </div>
+    </div>
+    <div class="admin-stat-card">
+      <span class="admin-stat-icon">🔥</span>
+      <div>
+        <div class="admin-stat-num">{{ on_sale_count }}</div>
+        <div class="admin-stat-label">Em Promoção</div>
+      </div>
+    </div>
+    <div class="admin-stat-card">
+      <span class="admin-stat-icon">⭐</span>
+      <div>
+        <div class="admin-stat-num">{{ featured_count }}</div>
+        <div class="admin-stat-label">Destaques</div>
+      </div>
+    </div>
+    <div class="admin-stat-card">
+      <span class="admin-stat-icon">🗂</span>
+      <div>
+        <div class="admin-stat-num">{{ categories|length }}</div>
+        <div class="admin-stat-label">Categorias</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Product Form -->
+  <div class="admin-card">
+    <h2 class="admin-card-title">➕ Adicionar Produto</h2>
+    <form method="post" action="{{ url_for('admin') }}" class="admin-form">
+      <input type="hidden" name="action" value="add" />
+      <div class="form-grid">
+        <div class="form-group form-group-full">
+          <label>Nome do Produto *</label>
+          <input type="text" name="name" required placeholder="Ex: iPhone 15 Pro Max 256GB" />
+        </div>
+        <div class="form-group form-group-full">
+          <label>Descrição</label>
+          <textarea name="description" rows="2" placeholder="Descrição breve do produto…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Preço Atual (R$) *</label>
+          <input type="number" name="price" step="0.01" min="0" required placeholder="999.99" />
+        </div>
+        <div class="form-group">
+          <label>Preço Original (R$)</label>
+          <input type="number" name="original_price" step="0.01" min="0" placeholder="1299.99" />
+        </div>
+        <div class="form-group">
+          <label>Categoria *</label>
+          <select name="category_id" required>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.icon }} {{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Badge (ex: 🔥 TOP)</label>
+          <input type="text" name="badge" placeholder="🔥 TOP" />
+        </div>
+        <div class="form-group form-group-full">
+          <label>Link Afiliado *</label>
+          <input type="url" name="affiliate_link" required placeholder="https://…" />
+        </div>
+        <div class="form-group form-group-full">
+          <label>URL da Imagem</label>
+          <input type="url" name="image_url" placeholder="https://images.unsplash.com/…" />
+        </div>
+        <div class="form-group">
+          <label>Avaliação (0-5)</label>
+          <input type="number" name="rating" step="0.1" min="0" max="5" value="4.5" />
+        </div>
+        <div class="form-group">
+          <label>Número de Reviews</label>
+          <input type="number" name="reviews" min="0" value="0" />
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="featured" value="1" />
+            <span>⭐ Produto Destaque</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="on_sale" value="1" />
+            <span>🔥 Em Promoção</span>
+          </label>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary">Adicionar Produto</button>
+    </form>
+  </div>
+
+  <!-- Products Table -->
+  <div class="admin-card">
+    <h2 class="admin-card-title">📦 Todos os Produtos ({{ total_products }})</h2>
+    <div class="table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Produto</th>
+            <th>Categoria</th>
+            <th>Preço</th>
+            <th>Rating</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in products %}
+          <tr>
+            <td><span class="table-id">#{{ p.id }}</span></td>
+            <td>
+              <div class="table-product">
+                <img src="{{ p.image_url }}" alt="{{ p.name }}"
+                     onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=80'" />
+                <span>{{ p.name[:40] }}{% if p.name|length > 40 %}…{% endif %}</span>
+              </div>
+            </td>
+            <td><span class="table-cat">{{ p.cat_name }}</span></td>
+            <td><span class="table-price">R$ {{ "%.2f"|format(p.price)|replace(".",",") }}</span></td>
+            <td><span class="table-rating">⭐ {{ p.rating }}</span></td>
+            <td>
+              {% if p.featured %}<span class="status-badge status-featured">Destaque</span>{% endif %}
+              {% if p.on_sale %}<span class="status-badge status-sale">Promoção</span>{% endif %}
+              {% if not p.featured and not p.on_sale %}<span class="status-badge status-normal">Normal</span>{% endif %}
+            </td>
+            <td>
+              <div class="table-actions">
+                <a href="{{ p.affiliate_link }}" target="_blank" class="action-btn action-view">Ver</a>
+                <form method="post" action="{{ url_for('admin') }}" style="display:inline;" onsubmit="return confirm('Excluir este produto?')">
+                  <input type="hidden" name="action" value="delete" />
+                  <input type="hidden" name="product_id" value="{{ p.id }}" />
+                  <button type="submit" class="action-btn action-delete">Excluir</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

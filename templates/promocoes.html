@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Promoções — TShop{% endblock %}
+
+{% block content %}
+<!-- Promo Hero -->
+<div class="promo-hero">
+  <div class="promo-hero-inner">
+    <div class="promo-hero-badge">🔥 Ofertas Especiais</div>
+    <h1>Promoções<br/><span class="brand-accent">imperdíveis</span></h1>
+    <p>Os maiores descontos selecionados para você. Corra, são por tempo limitado!</p>
+  </div>
+</div>
+
+<div class="container" style="padding-top:2rem;padding-bottom:3rem;">
+  <div class="section-header">
+    <h2 class="section-title">🏷️ {{ products|length }} Ofertas Ativas</h2>
+  </div>
+
+  <div class="products-grid products-grid-wide">
+    {% for p in products %}
+    {% include '_product_card.html' %}
+    {% endfor %}
+  </div>
+
+  {% if not products %}
+  <div class="empty-state">
+    <div class="empty-icon">🏷️</div>
+    <h2>Sem promoções no momento</h2>
+    <p>Volte em breve para conferir as novas ofertas.</p>
+    <a href="{{ url_for('produtos') }}" class="btn-primary">Ver todos os produtos</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

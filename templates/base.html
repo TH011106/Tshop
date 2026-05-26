@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}TShop — Marketplace Premium{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>" />
+</head>
+<body>
+
+<!-- ── NAVBAR ────────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="{{ url_for('index') }}" class="brand">
+      <span class="brand-icon">🛒</span>
+      <span class="brand-name">T<span class="brand-accent">shop</span></span>
+    </a>
+
+    <div class="search-wrap" id="searchWrap">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Buscar produtos, marcas…" autocomplete="off" />
+        <button class="search-btn" onclick="doSearch()">Buscar</button>
+      </div>
+      <div class="search-dropdown" id="searchDropdown"></div>
+    </div>
+
+    <div class="nav-actions">
+      <a href="{{ url_for('promocoes') }}" class="nav-link">
+        <span>🔥</span> Promoções
+      </a>
+      <a href="{{ url_for('admin') }}" class="nav-link">
+        <span>⚙️</span> Admin
+      </a>
+    </div>
+
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()">☰</button>
+  </div>
+
+  <!-- Mobile menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="{{ url_for('index') }}">🏠 Início</a>
+    <a href="{{ url_for('produtos') }}">📦 Produtos</a>
+    <a href="{{ url_for('promocoes') }}">🔥 Promoções</a>
+    <a href="{{ url_for('admin') }}">⚙️ Admin</a>
+    <div class="mobile-search">
+      <input type="text" id="mobileSearchInput" placeholder="Buscar…" />
+      <button onclick="doMobileSearch()">Buscar</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── CATEGORY BAR ──────────────────────────────────────── -->
+<div class="cat-bar">
+  <div class="cat-inner">
+    {% for cat in categories if categories is defined %}
+    <a href="{{ url_for('produtos', categoria=cat.slug) }}" class="cat-chip">
+      <span>{{ cat.icon }}</span> {{ cat.name }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ── PAGE CONTENT ──────────────────────────────────────── -->
+<main class="main-content">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ── FOOTER ────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="brand-name">T<span class="brand-accent">shop</span></span>
+      <p>O marketplace do futuro, hoje.</p>
+    </div>
+    <div class="footer-links">
+      <div>
+        <strong>Navegação</strong>
+        <a href="{{ url_for('index') }}">Início</a>
+        <a href="{{ url_for('produtos') }}">Produtos</a>
+        <a href="{{ url_for('promocoes') }}">Promoções</a>
+      </div>
+      <div>
+        <strong>Categorias</strong>
+        <a href="{{ url_for('produtos', categoria='eletronicos') }}">Eletrônicos</a>
+        <a href="{{ url_for('produtos', categoria='games') }}">Games</a>
+        <a href="{{ url_for('produtos', categoria='moda') }}">Moda</a>
+      </div>
+      <div>
+        <strong>Sobre</strong>
+        <a href="#">Links afiliados</a>
+        <a href="#">Política de privacidade</a>
+        <a href="#">Termos de uso</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2024 TShop · Todos os links são de parceiros afiliados · Feito com ❤️ e Flask</p>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

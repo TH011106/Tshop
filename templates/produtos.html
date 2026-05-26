@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Produtos — TShop{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:2rem;">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">
+        {% if query %}Resultados para "{{ query }}"
+        {% elif current_cat %}
+          {% for cat in categories if cat.slug == current_cat %}{{ cat.icon }} {{ cat.name }}{% endfor %}
+        {% else %}Todos os Produtos{% endif %}
+      </h1>
+      <p class="page-sub">{{ products|length }} produto(s) encontrado(s)</p>
+    </div>
+    <a href="{{ url_for('produtos') }}" class="btn-ghost-sm">Limpar filtros</a>
+  </div>
+
+  <div class="products-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-block">
+        <h3 class="sidebar-title">🗂 Categorias</h3>
+        <a href="{{ url_for('produtos', q=query) }}"
+           class="sidebar-link {% if not current_cat %}active{% endif %}">
+          Todas as categorias
+        </a>
+        {% for cat in categories %}
+        <a href="{{ url_for('produtos', categoria=cat.slug, q=query) }}"
+           class="sidebar-link {% if current_cat == cat.slug %}active{% endif %}">
+          {{ cat.icon }} {{ cat.name }}
+        </a>
+        {% endfor %}
+      </div>
+
+      <div class="sidebar-block">
+        <h3 class="sidebar-title">🔃 Ordenar por</h3>
+        <a href="{{ url_for('produtos', q=query, categoria=current_cat, sort='relevancia') }}"
+           class="sidebar-link {% if sort=='relevancia' %}active{% endif %}">Relevância</a>
+        <a href="{{ url_for('produtos', q=query, categoria=current_cat, sort='menor_preco') }}"
+           class="sidebar-link {% if sort=='menor_preco' %}active{% endif %}">Menor preço</a>
+        <a href="{{ url_for('produtos', q=query, categoria=current_cat, sort='maior_preco') }}"
+           class="sidebar-link {% if sort=='maior_preco' %}active{% endif %}">Maior preço</a>
+        <a href="{{ url_for('produtos', q=query, categoria=current_cat, sort='avaliacao') }}"
+           class="sidebar-link {% if sort=='avaliacao' %}active{% endif %}">Melhor avaliação</a>
+      </div>
+
+      <div class="sidebar-block sidebar-search-block">
+        <h3 class="sidebar-title">🔍 Buscar</h3>
+        <form method="get" action="{{ url_for('produtos') }}" class="sidebar-form">
+          <input type="hidden" name="categoria" value="{{ current_cat }}" />
+          <input type="text" name="q" value="{{ query }}" placeholder="Nome do produto…" class="sidebar-input" />
+          <button type="submit" class="btn-primary" style="width:100%;margin-top:.5rem;">Buscar</button>
+        </form>
+      </div>
+    </aside>
+
+    <!-- Grid -->
+    <div class="products-main">
+      {% if products %}
+      <div class="products-grid products-grid-wide">
+        {% for p in products %}
+        {% include '_product_card.html' %}
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h2>Nenhum produto encontrado</h2>
+        <p>Tente uma busca diferente ou explore outras categorias.</p>
+        <a href="{{ url_for('produtos') }}" class="btn-primary">Ver todos os produtos</a>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

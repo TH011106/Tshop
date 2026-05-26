@@ -1,0 +1,46 @@
+<div class="product-card">
+  {% if p.badge %}
+  <div class="product-badge">{{ p.badge }}</div>
+  {% endif %}
+  {% if p.on_sale and p.original_price %}
+  {% set discount = ((p.original_price - p.price) / p.original_price * 100)|int %}
+  <div class="product-discount">-{{ discount }}%</div>
+  {% endif %}
+  <div class="product-img-wrap">
+    <img
+      src="{{ p.image_url }}"
+      alt="{{ p.name }}"
+      class="product-img"
+      loading="lazy"
+      onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'"
+    />
+    <div class="product-overlay">
+      <a href="{{ p.affiliate_link }}" target="_blank" rel="noopener" class="btn-overlay">Ver Produto →</a>
+    </div>
+  </div>
+  <div class="product-body">
+    <div class="product-cat">{{ p.cat_name }}</div>
+    <h3 class="product-name">{{ p.name }}</h3>
+    <div class="product-rating">
+      <span class="stars">
+        {% for i in range(5) %}
+          {% if i < p.rating|int %}⭐{% else %}☆{% endif %}
+        {% endfor %}
+      </span>
+      <span class="rating-num">{{ p.rating }}</span>
+      <span class="reviews">({{ "{:,}".format(p.reviews).replace(",",".") }})</span>
+    </div>
+    <div class="product-price-wrap">
+      {% if p.original_price and p.original_price > p.price %}
+      <span class="price-original">R$ {{ "%.2f"|format(p.original_price)|replace(".",",") }}</span>
+      {% endif %}
+      <span class="price-current">R$ {{ "%.2f"|format(p.price)|replace(".",",") }}</span>
+    </div>
+    <div class="product-installment">
+      ou {{ 12 }}x de R$ {{ "%.2f"|format(p.price/12)|replace(".",",") }} sem juros
+    </div>
+    <a href="{{ p.affiliate_link }}" target="_blank" rel="noopener" class="btn-buy">
+      🛒 Comprar Agora
+    </a>
+  </div>
+</div>

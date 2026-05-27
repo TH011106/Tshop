@@ -33,9 +33,11 @@
       <a href="{{ url_for('promocoes') }}" class="nav-link">
         <span>🔥</span> Promoções
       </a>
-      <a href="{{ url_for('admin') }}" class="nav-link">
-        <span>⚙️</span> Admin
-      </a>
+     {% if session.get('admin') %}
+<a href="{{ url_for('admin') }}" class="nav-link">
+  <span>⚙️</span> Admin
+</a>
+{% endif %}
     </div>
 
     <button class="hamburger" id="hamburger" onclick="toggleMenu()">☰</button>
@@ -46,13 +48,17 @@
     <a href="{{ url_for('index') }}">🏠 Início</a>
     <a href="{{ url_for('produtos') }}">📦 Produtos</a>
     <a href="{{ url_for('promocoes') }}">🔥 Promoções</a>
-    <a href="{{ url_for('admin') }}">⚙️ Admin</a>
+     {% if session.get('admin') %}
+<a href="{{ url_for('admin') }}">⚙️ Admin</a>
+   <a href="{{ url_for('logout') }}">🚪 Sair</a>
+{% endif %}
     <div class="mobile-search">
       <input type="text" id="mobileSearchInput" placeholder="Buscar…" />
       <button onclick="doMobileSearch()">Buscar</button>
     </div>
   </div>
 </nav>
+ 
 
 <!-- ── CATEGORY BAR ──────────────────────────────────────── -->
 <div class="cat-bar">

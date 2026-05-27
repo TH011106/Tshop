@@ -3,15 +3,30 @@ import sqlite3
 import os
 from datetime import datetime
 
+# ─────────────────────────────
+# CONFIGURAÇÃO
+# ─────────────────────────────
 app = Flask(__name__)
-app.secret_key = 'tshop_secret_key_2024'
+app.secret_key = "tshop_secret_key_2024"
+
+ADMIN_USER = "admin"
+ADMIN_PASS = "132457"
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
+from functools import wraps
 
-# ─────────────────────────────────────────
-#  Database helpers
-# ─────────────────────────────────────────
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('admin'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
+
+# ─────────────────────────────
+# BANCO DE DADOS
+# ─────────────────────────────
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -22,6 +37,7 @@ def init_db():
     conn = get_db()
     c = conn.cursor()
 
+    # CATEGORIES
     c.execute('''
         CREATE TABLE IF NOT EXISTS categories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,6 +47,7 @@ def init_db():
         )
     ''')
 
+    # PRODUCTS
     c.execute('''
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,8 +68,7 @@ def init_db():
         )
     ''')
 
-    # Seed categories
-    # Seed categories
+    # CATEGORIAS PADRÃO
     cats = [
         ('Eletrônicos', '💻', 'eletronicos'),
         ('Moda', '👗', 'moda'),
@@ -70,163 +86,191 @@ def init_db():
             (name, icon, slug)
         )
 
-    # Seed products
-    products = [
-        (
-            "12 Envelopes Panini Copa 2026",
-            "Coleção oficial Panini Copa do Mundo 2026",
-            39.90,
-            49.90,
-            "https://http2.mlstatic.com/D_NQ_NP_2X_903022-MLA109894312615_032026-F.webp",
-            "SEU_LINK_AFILIADO",
-            1,
-            4.8,
-            120,
-            "PROMOÇÃO",
-            1,
-            1
-        )
-    ]
-
-    for p in products:
-        c.execute('''INSERT OR IGNORE INTO products
-            (name, description, price, original_price, image_url, affiliate_link,
-             category_id, rating, reviews, badge, featured, on_sale)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', p)
+    # PRODUTO EXEMPLO
+    c.execute('''
+        INSERT OR IGNORE INTO products
+        (name, description, price, original_price, image_url, affiliate_link,
+         category_id, rating, reviews, badge, featured, on_sale)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+    ''', (
+        "12 Envelopes Panini Copa 2026",
+        "Coleção oficial Panini Copa do Mundo 2026",
+        39.90,
+        49.90,
+        "https://http2.mlstatic.com/D_NQ_NP_2X_903022-MLA109894312615_032026-F.webp",
+        "SEU_LINK_AFILIADO",
+        1,
+        4.8,
+        120,
+        "PROMOÇÃO",
+        1,
+        1
+    ))
 
     conn.commit()
     conn.close()
-# ─────────────────────────────────────────
-#  Routes
-# ─────────────────────────────────────────
+ 
+# ─────────────────────────────
+# LOGIN ADMIN
+# ─────────────────────────────
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        user = request.form['user']
+        password = request.form['password']
 
+        if user == ADMIN_USER and password == ADMIN_PASS:
+            session['admin'] = True
+            return redirect(url_for('admin'))
+        else:
+            return "Login inválido"
+
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    session.pop('admin', None)
+    return redirect(url_for('index'))
+
+
+# ─────────────────────────────
+# ROTAS
+# ─────────────────────────────
 @app.route('/')
 def index():
     conn = get_db()
-    featured   = conn.execute('SELECT p.*, c.name as cat_name FROM products p LEFT JOIN categories c ON p.category_id=c.id WHERE p.featured=1 LIMIT 8').fetchall()
-    on_sale    = conn.execute('SELECT p.*, c.name as cat_name FROM products p LEFT JOIN categories c ON p.category_id=c.id WHERE p.on_sale=1 LIMIT 8').fetchall()
+    featured = conn.execute('SELECT * FROM products WHERE featured=1').fetchall()
     categories = conn.execute('SELECT * FROM categories').fetchall()
-    recent     = conn.execute('SELECT p.*, c.name as cat_name FROM products p LEFT JOIN categories c ON p.category_id=c.id ORDER BY p.id DESC LIMIT 6').fetchall()
     conn.close()
-    return render_template('index.html', featured=featured, on_sale=on_sale, categories=categories, recent=recent)
+
+    return render_template('index.html',
+                           featured=featured,
+                           categories=categories)
 
 
 @app.route('/produtos')
 def produtos():
-    query    = request.args.get('q', '')
-    cat_slug = request.args.get('categoria', '')
-    sort     = request.args.get('sort', 'relevancia')
-
     conn = get_db()
+    products = conn.execute('SELECT * FROM products').fetchall()
     categories = conn.execute('SELECT * FROM categories').fetchall()
-
-    sql    = 'SELECT p.*, c.name as cat_name, c.slug as cat_slug FROM products p LEFT JOIN categories c ON p.category_id=c.id WHERE 1=1'
-    params = []
-
-    if query:
-        sql += ' AND (p.name LIKE ? OR p.description LIKE ?)'
-        params += [f'%{query}%', f'%{query}%']
-    if cat_slug:
-        sql += ' AND c.slug = ?'
-        params.append(cat_slug)
-
-    order_map = {
-        'menor_preco': 'p.price ASC',
-        'maior_preco': 'p.price DESC',
-        'avaliacao':   'p.rating DESC',
-        'relevancia':  'p.featured DESC, p.reviews DESC',
-    }
-    sql += f' ORDER BY {order_map.get(sort, "p.featured DESC")}'
-
-    products = conn.execute(sql, params).fetchall()
     conn.close()
 
     return render_template('produtos.html',
                            products=products,
-                           categories=categories,
-                           query=query,
-                           current_cat=cat_slug,
-                           sort=sort)
+                           categories=categories)
 
 
 @app.route('/promocoes')
 def promocoes():
     conn = get_db()
-    on_sale    = conn.execute('SELECT p.*, c.name as cat_name FROM products p LEFT JOIN categories c ON p.category_id=c.id WHERE p.on_sale=1 ORDER BY (p.original_price - p.price) DESC').fetchall()
-    categories = conn.execute('SELECT * FROM categories').fetchall()
+    products = conn.execute('SELECT * FROM products WHERE on_sale=1').fetchall()
     conn.close()
-    return render_template('promocoes.html', products=on_sale, categories=categories)
+
+    return render_template('promocoes.html', products=products)
 
 
+# ─────────────────────────────
+# ADMIN PROTEGIDO
+# ─────────────────────────────
 @app.route('/admin', methods=['GET', 'POST'])
+@admin_required
 def admin():
+
+    conn = get_db()
+
     if request.method == 'POST':
         action = request.form.get('action')
-        conn = get_db()
 
         if action == 'add':
-            conn.execute('''INSERT INTO products
+            conn.execute('''
+                INSERT INTO products
                 (name, description, price, original_price, image_url, affiliate_link,
                  category_id, rating, reviews, badge, featured, on_sale)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''', (
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            ''', (
                 request.form['name'],
                 request.form['description'],
                 float(request.form['price']),
                 float(request.form.get('original_price') or request.form['price']),
-                request.form.get('image_url', 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'),
+                request.form.get('image_url'),
                 request.form['affiliate_link'],
                 int(request.form['category_id']),
                 float(request.form.get('rating', 4.5)),
                 int(request.form.get('reviews', 0)),
-                request.form.get('badge') or None,
+                request.form.get('badge'),
                 1 if request.form.get('featured') else 0,
-                1 if request.form.get('on_sale') else 0,
+                1 if request.form.get('on_sale') else 0
             ))
             conn.commit()
 
         elif action == 'delete':
-            conn.execute('DELETE FROM products WHERE id=?', (request.form['product_id'],))
+            conn.execute('DELETE FROM products WHERE id=?',
+                         (request.form['product_id'],))
             conn.commit()
 
         conn.close()
         return redirect(url_for('admin'))
 
-    conn = get_db()
-    products   = conn.execute('SELECT p.*, c.name as cat_name FROM products p LEFT JOIN categories c ON p.category_id=c.id ORDER BY p.id DESC').fetchall()
+    # GET
+    products = conn.execute('SELECT * FROM products').fetchall()
     categories = conn.execute('SELECT * FROM categories').fetchall()
-    total_products = conn.execute('SELECT COUNT(*) as n FROM products').fetchone()['n']
-    on_sale_count  = conn.execute('SELECT COUNT(*) as n FROM products WHERE on_sale=1').fetchone()['n']
-    featured_count = conn.execute('SELECT COUNT(*) as n FROM products WHERE featured=1').fetchone()['n']
+
     conn.close()
-    return render_template('admin.html', products=products, categories=categories,
-                           total_products=total_products, on_sale_count=on_sale_count,
-                           featured_count=featured_count)
 
+    return render_template(
+        'admin.html',
+        products=products,
+        categories=categories
+    )
 
+# ─────────────────────────────
+# API SEARCH
+# ─────────────────────────────
 @app.route('/api/search')
 def api_search():
     q = request.args.get('q', '')
+
     conn = get_db()
     results = conn.execute(
         'SELECT id, name, price, image_url FROM products WHERE name LIKE ? LIMIT 6',
         (f'%{q}%',)
     ).fetchall()
     conn.close()
+
     return jsonify([dict(r) for r in results])
 
 
+# ─────────────────────────────
+# PRODUTO DETALHE
+# ─────────────────────────────
 @app.route('/produto/<int:product_id>')
 def produto_detalhe(product_id):
     conn = get_db()
-    product    = conn.execute('SELECT p.*, c.name as cat_name FROM products p LEFT JOIN categories c ON p.category_id=c.id WHERE p.id=?', (product_id,)).fetchone()
-    related    = conn.execute('SELECT * FROM products WHERE category_id=? AND id!=? LIMIT 4', (product['category_id'], product_id)).fetchall()
-    conn.close()
+
+    product = conn.execute(
+        'SELECT * FROM products WHERE id=?',
+        (product_id,)
+    ).fetchone()
+
     if not product:
         return redirect(url_for('index'))
-    return render_template('produto_detalhe.html', product=product, related=related)
+
+    related = conn.execute(
+        'SELECT * FROM products WHERE category_id=? AND id!=? LIMIT 4',
+        (product['category_id'], product_id)
+    ).fetchall()
+
+    conn.close()
+
+    return render_template('produto_detalhe.html',
+                           product=product,
+                           related=related)
 
 
+# ─────────────────────────────
+# START
+# ─────────────────────────────
 if __name__ == '__main__':
     init_db()
-    print('\n🛒 TShop iniciado! Acesse: http://127.0.0.1:5000\n')
     app.run(debug=True, host='0.0.0.0', port=5000)
